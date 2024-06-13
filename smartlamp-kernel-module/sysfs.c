@@ -77,6 +77,7 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
 // Executado quando o dispositivo USB é desconectado da USB
 static void usb_disconnect(struct usb_interface *interface) {
     printk(KERN_INFO "SmartLamp: Dispositivo desconectado.\n");
+    if (sys_obj) kobject_put(sys_obj);
     kfree(usb_in_buffer);                   // Desaloca buffers
     kfree(usb_out_buffer);
 }
@@ -107,7 +108,7 @@ static int usb_read_serial() {
 // Executado quando o arquivo /sys/kernel/smartlamp/{led, ldr} é lido (e.g., cat /sys/kernel/smartlamp/led)
 static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, char *buff) {
     // value representa o valor do led ou ldr
-    int value;
+    long value;
     // attr_name representa o nome do arquivo que está sendo lido (ldr ou led)
     const char *attr_name = attr->attr.name;
 
@@ -117,17 +118,17 @@ static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, c
     // Implemente a leitura do valor do led usando a função usb_read_serial()
       if (strcmp(attr_name, "led") == 0) {
     // Exibe seu nome quando o arquivo led é lido
-        sprintf(buff, "Natalia");
+        printk(KERN_INFO "SmartLamp: Natalia");
     } else if (strcmp(attr_name, "ldr") == 0) {
         // Exibe "DevTITANS" quando o arquivo ldr é lido
-        sprintf(buff, "DevTITANS\n");
+        printk(KERN_INFO "SmartLamp: DevTITANS\n");
     } else {
         // Se outro arquivo for lido, exibe uma mensagem de erro
         printk(KERN_ERR "SmartLamp: Arquivo desconhecido: %s\n", attr_name);
-        return -EINVAL;
+        return -EACCES;
     }
 
-    sprintf(buff, "%d\n", value);                   // Cria a mensagem com o valor do led, ldr
+    //sprintf(buff, "%d\n", value);                   // Cria a mensagem com o valor do led, ldr
     return strlen(buff);
 }
 
