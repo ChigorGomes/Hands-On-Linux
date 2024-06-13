@@ -78,6 +78,7 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
 // Executado quando o dispositivo USB é desconectado da USB
 static void usb_disconnect(struct usb_interface *interface) {
     printk(KERN_INFO "SmartLamp: Dispositivo desconectado.\n");
+    if (sys_obj) kobject_put(sys_obj);      // Remove os arquivos em /sys/kernel/smartlamp
     kfree(usb_in_buffer);                   // Desaloca buffers
     kfree(usb_out_buffer);
 }
@@ -157,13 +158,11 @@ static ssize_t attr_store(struct kobject *sys_obj, struct kobj_attribute *attr, 
     }
 
     // Verifica o nome do atributo e executa ações específicas
-    if (strcmp(attr_name, "nameLDR") == 0) {
+    if (strcmp(attr_name, "ldr") == 0) {
         printk(KERN_ALERT "SmartLamp: escrita no arquivo LDR não permitida.\n");
         return -EACCES; // Retorna erro ao tentar escrever no arquivo LDR
-    } else if (strcmp(attr_name, "nameLED") == 0) {
-        printk(KERN_INFO "SmartLamp: valor recebido para nameLED é %ld.\n", value);
+    } else if (strcmp(attr_name, "led") == 0) {
+        printk(KERN_INFO "SmartLamp: valor recebido para led é %ld.\n", value);
     }
-
     return strlen(buff);
-}
 }
